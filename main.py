@@ -9,13 +9,12 @@ from telegram.ext import (
     CallbackQueryHandler)
 import os
 
-TOKEN=os.environ['TOKEN']
+TOKEN = os.environ['TOKEN']
+counter = 0  
 
 def start(update: Update, context: CallbackContext):
     bot = context.bot
-    
     chat_id = update.message.chat.id
-    text = update.message.text
     bot.sendMessage(chat_id=chat_id, text="Send me a Photo")
 
 def photo(update: Update, context: CallbackContext):
@@ -23,15 +22,23 @@ def photo(update: Update, context: CallbackContext):
     chat_id = update.message.chat.id
     photo = update.message.photo[-1]["file_id"]
 
-    button1 = InlineKeyboardButton(text = "👍", callback_data="like")
-    button2 = InlineKeyboardButton(text = "👎", callback_data="dislike")
-
+    button1 = InlineKeyboardButton(text="👍", callback_data="like")
+    button2 = InlineKeyboardButton(text="👎", callback_data="dislike")
     keyboard = InlineKeyboardMarkup([[button1, button2]])
-    bot.sendPhoto(chat_id=chat_id, photo=photo, reply_markup=keyboard)
+    bot.send_photo(chat_id=chat_id, photo=photo, reply_markup=keyboard)
 
 def like_and_dislike(update: Update, context: CallbackContext):
+    global counter
     query = update.callback_query
-    print(query.data)
+    data = query.data
+    
+    if data == "like":
+        counter += 1  
+    elif data == "dislike":
+        counter -= 1  
+    
+    query.answer()
+    query.edit_message_caption(caption=f"Current count: {counter}")
 
 updater = Updater(TOKEN)
 dp = updater.dispatcher
